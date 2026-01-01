@@ -1,21 +1,22 @@
 import { Users, FileText, CheckSquare, Image, UserCircle, ShoppingBag, Calendar, CreditCard, BarChart3, LogOut, LayoutDashboard, GraduationCap } from 'lucide-react';
-import { NavigationItem } from '../App';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
-  activeSection: NavigationItem;
-  onNavigate: (section: NavigationItem) => void;
   onLogout: () => void;
 }
 
 interface NavItem {
-  id: NavigationItem;
+  id: string;
   label: string;
   icon: React.ElementType;
   description: string;
   badge?: number;
 }
 
-export function Sidebar({ activeSection, onNavigate, onLogout }: SidebarProps) {
+export function Sidebar({ onLogout }: SidebarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, description: 'Dashboard home' },
     { id: 'modeler-requests', label: 'Modeler Requests', icon: Users, description: 'New applications', badge: 5 },
@@ -64,12 +65,12 @@ export function Sidebar({ activeSection, onNavigate, onLogout }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-4 px-4">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeSection === item.id;
+          const isActive = location.pathname === `/${item.id}`;
           
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => navigate(`/${item.id}`)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-[14px] mb-2 transition-all ${
                 isActive 
                   ? 'bg-white shadow-lg' 

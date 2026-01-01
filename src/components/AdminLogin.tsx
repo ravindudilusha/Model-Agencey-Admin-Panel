@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminLoginProps {
   onLogin: () => void;
 }
 
 export function AdminLogin({ onLogin }: AdminLoginProps) {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +25,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
     // Simulate brief loading for better UX
     setTimeout(() => {
       onLogin();
+      navigate('/dashboard');
       setIsLoading(false);
     }, 500);
   };

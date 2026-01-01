@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, Edit, UserX, UserCheck, Key, Search, X } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 
 interface Modeler {
   id: string;
@@ -109,11 +110,20 @@ export function ModelerManagement() {
   const [editForm, setEditForm] = useState<Modeler | null>(null);
 
   const toggleStatus = (id: string) => {
+    const modeler = modelers.find(m => m.id === id);
+    const newStatus = modeler?.status === 'active' ? 'inactive' : 'active';
+    
     setModelers(modelers.map(modeler =>
       modeler.id === id
-        ? { ...modeler, status: modeler.status === 'active' ? 'inactive' : 'active' }
+        ? { ...modeler, status: newStatus }
         : modeler
     ));
+    
+    if (newStatus === 'inactive') {
+      toast.error(`Modeler deactivated successfully!`);
+    } else {
+      toast.error(`Modeler activated successfully!`);
+    }
   };
 
   const handleViewProfile = (modeler: Modeler) => {
@@ -132,12 +142,13 @@ export function ModelerManagement() {
       setModelers(modelers.map(m => m.id === editForm.id ? editForm : m));
       setShowEditModal(false);
       setEditForm(null);
+      toast.success('Modeler profile updated successfully!');
     }
   };
 
   const handleResetPassword = (modeler: Modeler) => {
     // In real app: Generate new temp password and send email
-    alert(`Password reset for ${modeler.name}. New temporary password sent to ${modeler.email}`);
+    toast.success(`Password reset for ${modeler.name}. New temporary password sent to ${modeler.email}`);
   };
 
   const filteredModelers = modelers.filter(modeler =>

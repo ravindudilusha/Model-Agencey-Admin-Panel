@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Eye, Check, X, FileText, CreditCard } from 'lucide-react';
+import { Check, X, Eye, User, CreditCard, Calendar, Shield, FileText } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+import { RejectModal } from './RejectModal';
 
 interface SignupVerification {
   id: string;
@@ -10,11 +12,10 @@ interface SignupVerification {
   idNumber: string;
   paymentReference: string;
   paymentAmount: number;
-  planSelected: string;
-  planPrice: number;
   submittedDate: string;
   status: 'pending' | 'approved' | 'rejected';
   referenceMatched: boolean;
+  rejectionReason?: string;
 }
 
 export function SignupVerification() {
@@ -28,8 +29,6 @@ export function SignupVerification() {
       idNumber: '920123456V',
       paymentReference: 'PAY123456',
       paymentAmount: 5199,
-      planSelected: 'Professional',
-      planPrice: 5199,
       submittedDate: '11/23/2025',
       status: 'pending',
       referenceMatched: true,
@@ -43,8 +42,6 @@ export function SignupVerification() {
       idNumber: '880445789V',
       paymentReference: 'PAY123457',
       paymentAmount: 999,
-      planSelected: 'Basic',
-      planPrice: 999,
       submittedDate: '11/22/2025',
       status: 'pending',
       referenceMatched: true,
@@ -53,6 +50,8 @@ export function SignupVerification() {
 
   const [selectedSignup, setSelectedSignup] = useState<SignupVerification | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [signupToReject, setSignupToReject] = useState<string | null>(null);
 
   const handleApprove = (id: string) => {
     setSignups(signups.map(signup => 
@@ -60,14 +59,29 @@ export function SignupVerification() {
     ));
     setShowDetails(false);
     // In real app: Generate username (ID Number) and temp password, send email
+    toast.success(`Signup ${id} approved and credentials sent.`);
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string, reason: string) => {
     setSignups(signups.map(signup => 
-      signup.id === id ? { ...signup, status: 'rejected' } : signup
+      signup.id === id ? { ...signup, status: 'rejected', rejectionReason: reason } : signup
     ));
     setShowDetails(false);
     // In real app: Send rejection email with reason
+    toast.error(`Signup ${id} rejected with reason: ${reason}`);
+  };
+
+  const openRejectModal = (id: string) => {
+    setSignupToReject(id);
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = (reason: string) => {
+    if (signupToReject) {
+      handleReject(signupToReject, reason);
+    }
+    setShowRejectModal(false);
+    setSignupToReject(null);
   };
 
   const viewDetails = (signup: SignupVerification) => {
@@ -123,13 +137,6 @@ export function SignupVerification() {
                 <p className="text-sm text-neutral-950">{signup.email}</p>
               </div>
 
-              {/* Plan Selected */}
-              <div>
-                <h4 className="text-[#6a7282] text-xs uppercase mb-2">Plan Selected</h4>
-                <p className="text-sm text-neutral-950 mb-1">{signup.planSelected}</p>
-                <p className="text-sm text-neutral-950">${signup.planPrice}/year</p>
-              </div>
-
               {/* Payment */}
               <div>
                 <h4 className="text-[#6a7282] text-xs uppercase mb-2">Payment</h4>
@@ -173,7 +180,7 @@ export function SignupVerification() {
                     Approve & Send Credentials
                   </button>
                   <button
-                    onClick={() => handleReject(signup.id)}
+                    onClick={() => openRejectModal(signup.id)}
                     className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b51432] transition-colors flex items-center gap-2"
                   >
                     <X className="w-4 h-4" />
@@ -260,7 +267,7 @@ export function SignupVerification() {
             {selectedSignup.status === 'pending' && (
               <div className="p-6 border-t border-gray-200 flex gap-4">
                 <button
-                  onClick={() => handleReject(selectedSignup.id)}
+                  onClick={() => openRejectModal(selectedSignup.id)}
                   className="flex-1 bg-[#d4183d] text-white py-3 rounded-lg hover:bg-[#b51432] transition-colors flex items-center justify-center gap-2"
                 >
                   <X className="w-5 h-5" />
@@ -287,6 +294,17 @@ export function SignupVerification() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <RejectModal
+          isOpen={showRejectModal}
+          onClose={() => setShowRejectModal(false)}
+          onConfirm={confirmReject}
+          title="Reject Signup"
+          itemName={signupToReject ? signups.find(s => s.id === signupToReject)?.name || '' : ''}
+        />
       )}
     </div>
   );

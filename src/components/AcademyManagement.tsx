@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Edit2, Upload, Save, X, Calendar, MapPin, DollarSign, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Calendar, DollarSign, MapPin, Image as ImageIcon, Upload, Save } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 
 interface ClassSchedule {
   id: string;
@@ -60,12 +61,14 @@ export function AcademyManagement() {
       setSchedules(schedules.map(s => s.id === editingSchedule.id ? editingSchedule : s));
       setShowScheduleModal(false);
       setEditingSchedule(null);
+      toast.success('Class schedule updated successfully!');
     }
   };
 
   const handleSaveFees = () => {
     setShowFeesModal(false);
     setEditingFees(false);
+    toast.success('Course fees updated successfully!');
   };
 
   const handleEditBanner = (banner: Banner) => {
@@ -101,6 +104,21 @@ export function AcademyManagement() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-neutral-950 text-xl">Class Schedules</h3>
+          <button
+            onClick={() => {
+              setEditingSchedule({
+                id: `SCH${(schedules.length + 1).toString().padStart(3, '0')}`,
+                location: '',
+                day: 'Monday',
+                time: '',
+              });
+              setShowScheduleModal(true);
+            }}
+            className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Schedule
+          </button>
         </div>
         
         <div className="grid grid-cols-3 gap-4">
@@ -114,7 +132,7 @@ export function AcademyManagement() {
                   onClick={() => handleEditSchedule(schedule)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <Edit2 className="w-4 h-4 text-[#6a7282]" />
+                  <Edit className="w-4 h-4 text-[#6a7282]" />
                 </button>
               </div>
               <h4 className="text-neutral-950 text-lg mb-3">{schedule.location}</h4>
@@ -143,7 +161,7 @@ export function AcademyManagement() {
             onClick={() => { setEditingFees(true); setShowFeesModal(true); }}
             className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center gap-2"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit className="w-4 h-4" />
             Edit Fees
           </button>
         </div>
@@ -212,7 +230,7 @@ export function AcademyManagement() {
                   onClick={() => handleEditBanner(banner)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <Edit2 className="w-4 h-4 text-[#6a7282]" />
+                  <Edit className="w-4 h-4 text-[#6a7282]" />
                 </button>
               </div>
 
@@ -468,6 +486,7 @@ export function AcademyManagement() {
                 onClick={() => {
                   setBanners(banners.map(b => b.id === selectedBanner.id ? selectedBanner : b));
                   setShowBannerModal(false);
+                  toast.success('Banner updated successfully!');
                 }}
                 className="flex-1 bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
               >

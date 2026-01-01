@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Check, X, Eye, FileText } from 'lucide-react';
+import { Eye, Check, X, CreditCard } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+import { RejectModal } from './RejectModal';
 
 interface Payment {
   id: string;
@@ -13,6 +15,7 @@ interface Payment {
   amount: number;
   paymentSlipFilename: string;
   status: 'pending' | 'verified' | 'rejected';
+  rejectionReason?: string;
 }
 
 export function PaymentVerification() {
@@ -60,6 +63,8 @@ export function PaymentVerification() {
 
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showPaymentSlip, setShowPaymentSlip] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [paymentToReject, setPaymentToReject] = useState<string | null>(null);
 
   const handleApprove = (id: string) => {
     setPayments(payments.map(payment =>
@@ -67,13 +72,28 @@ export function PaymentVerification() {
     ));
     setShowPaymentSlip(false);
     // In real app: Send confirmation email, block calendar date, notify modeler
+    toast.success('Payment approved successfully!');
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string, reason: string) => {
     setPayments(payments.map(payment =>
-      payment.id === id ? { ...payment, status: 'rejected' } : payment
+      payment.id === id ? { ...payment, status: 'rejected', rejectionReason: reason } : payment
     ));
     setShowPaymentSlip(false);
+    toast.error('Payment rejected successfully!');
+  };
+
+  const openRejectModal = (id: string) => {
+    setPaymentToReject(id);
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = (reason: string) => {
+    if (paymentToReject) {
+      handleReject(paymentToReject, reason);
+    }
+    setShowRejectModal(false);
+    setPaymentToReject(null);
   };
 
   const handleViewPaymentSlip = (payment: Payment) => {
@@ -152,7 +172,7 @@ export function PaymentVerification() {
             {/* Payment Slip */}
             <div className="mb-6">
               <div className="flex items-center gap-2 text-sm text-neutral-950">
-                <FileText className="w-4 h-4" />
+                <CreditCard className="w-4 h-4" />
                 <span>Payment Slip:</span>
                 <span className="text-[#6a7282]">{payment.paymentSlipFilename}</span>
               </div>
@@ -177,8 +197,8 @@ export function PaymentVerification() {
                     Approve Payment
                   </button>
                   <button
-                    onClick={() => handleReject(payment.id)}
-                    className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b51432] transition-colors flex items-center gap-2"
+                    onClick={() => openRejectModal(payment.id)}
+                    className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#c51a30] transition-colors flex items-center gap-2"
                   >
                     <X className="w-4 h-4" />
                     Reject Payment
@@ -216,7 +236,7 @@ export function PaymentVerification() {
               <div>
                 <h3 className="text-neutral-950 mb-3">Payment Slip</h3>
                 <div className="bg-gray-100 border-2 border-[#d1d5dc] rounded-lg p-8 aspect-video flex flex-col items-center justify-center">
-                  <FileText className="w-16 h-16 text-gray-400 mb-3" />
+                  <CreditCard className="w-16 h-16 text-gray-400 mb-3" />
                   <p className="text-[#6a7282] text-sm mb-1">Payment Slip Image:</p>
                   <p className="text-[#6a7282] text-sm">{selectedPayment.paymentSlipFilename}</p>
                 </div>
@@ -258,8 +278,8 @@ export function PaymentVerification() {
             {selectedPayment.status === 'pending' && (
               <div className="p-6 border-t border-gray-200 flex gap-4">
                 <button
-                  onClick={() => handleReject(selectedPayment.id)}
-                  className="flex-1 bg-[#d4183d] text-white py-3 rounded-lg hover:bg-[#b51432] transition-colors flex items-center justify-center gap-2"
+                  onClick={() => openRejectModal(selectedPayment.id)}
+                  className="flex-1 bg-[#d4183d] text-white py-3 rounded-lg hover:bg-[#c51a30] transition-colors flex items-center justify-center gap-2"
                 >
                   <X className="w-5 h-5" />
                   Reject Payment
@@ -286,6 +306,15 @@ export function PaymentVerification() {
           </div>
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        onConfirm={confirmReject}
+        title="Reject Payment"
+        itemName={paymentToReject ? payments.find(p => p.id === paymentToReject)?.paymentId || '' : ''}
+      />
     </div>
   );
 }

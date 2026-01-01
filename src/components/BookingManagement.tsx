@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Eye, Check, X, Phone, Search } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+import { RejectModal } from './RejectModal';
 
 interface Booking {
   id: string;
@@ -18,6 +20,7 @@ interface Booking {
   eventLocation: string;
   submittedDate: string;
   status: 'pending' | 'accepted' | 'payment-pending' | 'confirmed' | 'rejected';
+  rejectionReason?: string;
 }
 
 export function BookingManagement() {
@@ -81,18 +84,35 @@ export function BookingManagement() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [bookingToReject, setBookingToReject] = useState<string | null>(null);
 
   const handleAccept = (id: string) => {
     setBookings(bookings.map(booking =>
       booking.id === id ? { ...booking, status: 'accepted' } : booking
     ));
     // In real app: Send email with payment link to customer
+    toast.success('Booking accepted! Payment link sent to customer.');
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string, reason: string) => {
     setBookings(bookings.map(booking =>
-      booking.id === id ? { ...booking, status: 'rejected' } : booking
+      booking.id === id ? { ...booking, status: 'rejected', rejectionReason: reason } : booking
     ));
+    toast.error('Booking rejected successfully!');
+  };
+
+  const openRejectModal = (id: string) => {
+    setBookingToReject(id);
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = (reason: string) => {
+    if (bookingToReject) {
+      handleReject(bookingToReject, reason);
+    }
+    setShowRejectModal(false);
+    setBookingToReject(null);
   };
 
   const handleViewDetails = (booking: Booking) => {
@@ -253,8 +273,8 @@ export function BookingManagement() {
                       Accept
                     </button>
                     <button
-                      onClick={() => handleReject(booking.id)}
-                      className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b51432] transition-colors flex items-center gap-2"
+                      onClick={() => openRejectModal(booking.id)}
+                      className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b91c24] transition-colors flex items-center gap-2"
                     >
                       <X className="w-4 h-4" />
                       Reject
@@ -348,6 +368,17 @@ export function BookingManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <RejectModal
+          isOpen={showRejectModal}
+          onClose={() => setShowRejectModal(false)}
+          onConfirm={confirmReject}
+          title="Reject Booking"
+          itemName={bookingToReject ? bookings.find(b => b.id === bookingToReject)?.eventName || '' : ''}
+        />
       )}
     </div>
   );

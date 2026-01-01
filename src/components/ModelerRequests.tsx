@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Eye, Check, X, Search } from 'lucide-react';
+import { Eye, Check, X, Calendar, MapPin, Phone, Mail, User, Briefcase, Search } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+import { RejectModal } from './RejectModal';
 
 interface ModelerRequest {
   id: string;
@@ -27,6 +29,7 @@ interface ModelerRequest {
   status: 'pending' | 'approved' | 'rejected';
   submittedDate: string;
   photos: string[];
+  rejectionReason?: string;
 }
 
 export function ModelerRequests() {
@@ -116,19 +119,37 @@ export function ModelerRequests() {
   const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [requestToReject, setRequestToReject] = useState<string | null>(null);
 
   const handleApprove = (id: string) => {
     setRequests(requests.map(req => 
       req.id === id ? { ...req, status: 'approved' } : req
     ));
     // In real app: Send email with reference number, payment instructions, signup link
+    toast.success('Request approved successfully!');
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string, reason: string) => {
     setRequests(requests.map(req => 
-      req.id === id ? { ...req, status: 'rejected' } : req
+      req.id === id ? { ...req, status: 'rejected', rejectionReason: reason } : req
     ));
+    setShowDetails(false);
     // In real app: Send rejection email with reason
+    toast.error('Request rejected successfully!');
+  };
+
+  const openRejectModal = (id: string) => {
+    setRequestToReject(id);
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = (reason: string) => {
+    if (requestToReject) {
+      handleReject(requestToReject, reason);
+    }
+    setShowRejectModal(false);
+    setRequestToReject(null);
   };
 
   const viewDetails = (request: ModelerRequest) => {
@@ -274,7 +295,7 @@ export function ModelerRequests() {
                     Accept
                   </button>
                   <button
-                    onClick={() => handleReject(request.id)}
+                    onClick={() => openRejectModal(request.id)}
                     className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b51432] transition-colors flex items-center gap-2"
                   >
                     <X className="w-4 h-4" />
@@ -461,7 +482,7 @@ export function ModelerRequests() {
                   Accept Request
                 </button>
                 <button
-                  onClick={() => handleReject(selectedRequest.id)}
+                  onClick={() => openRejectModal(selectedRequest.id)}
                   className="flex-1 bg-[#d4183d] text-white py-4 rounded-lg text-lg hover:bg-[#b51432] transition-colors flex items-center justify-center gap-2"
                 >
                   <X className="w-5 h-5" />
@@ -472,6 +493,15 @@ export function ModelerRequests() {
           </div>
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        onConfirm={confirmReject}
+        title="Reject Modeler Request"
+        itemName={requestToReject ? requests.find(r => r.id === requestToReject)?.name || '' : ''}
+      />
     </div>
   );
 }

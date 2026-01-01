@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Eye, UserX, UserCheck, Search, X, Key } from 'lucide-react';
+import { Eye, Ban, CheckCircle, Phone, Mail, X, Search, Key } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 
 interface Booking {
   id: string;
@@ -91,11 +92,20 @@ export function CustomerManagement() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const toggleStatus = (id: string) => {
+    const customer = customers.find(c => c.id === id);
+    const newStatus = customer?.status === 'active' ? 'suspended' : 'active';
+    
     setCustomers(customers.map(customer =>
       customer.id === id
-        ? { ...customer, status: customer.status === 'active' ? 'suspended' : 'active' }
+        ? { ...customer, status: newStatus }
         : customer
     ));
+    
+    if (newStatus === 'suspended') {
+      toast.error(`Customer account suspended successfully!`);
+    } else {
+      toast.error(`Customer account activated successfully!`);
+    }
   };
 
   const handleViewDetails = (customer: Customer) => {
@@ -104,7 +114,7 @@ export function CustomerManagement() {
   };
 
   const handleResetPassword = (customer: Customer) => {
-    alert(`Password reset for ${customer.name}. New temporary password sent to ${customer.email}`);
+    toast.success(`Password reset for ${customer.name}. New temporary password sent to ${customer.email}`);
   };
 
   const handleSuspendAccount = (customer: Customer) => {
@@ -208,7 +218,7 @@ export function CustomerManagement() {
                   onClick={() => toggleStatus(customer.id)}
                   className="px-4 py-2 bg-[#d4183d] text-white rounded-lg text-sm hover:bg-[#b51432] transition-colors flex items-center gap-2"
                 >
-                  <UserX className="w-4 h-4" />
+                  <Ban className="w-4 h-4" />
                   Suspend
                 </button>
               ) : (
@@ -216,7 +226,7 @@ export function CustomerManagement() {
                   onClick={() => toggleStatus(customer.id)}
                   className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center gap-2"
                 >
-                  <UserCheck className="w-4 h-4" />
+                  <CheckCircle className="w-4 h-4" />
                   Activate
                 </button>
               )}
